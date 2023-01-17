@@ -4,14 +4,15 @@ import time
 
 regions = ["us-east-1", "us-west-2"]
 
-ws_list = []
-with open(
-    "/Users/jabreu1/Library/CloudStorage/OneDrive-Chewy.com,LLC/Documents/Workspaces/describe_workspaces.csv",
-    newline="",
-    encoding="utf-8-sig",
-) as inputfile:
-    for row in csv.reader(inputfile):
-        ws_list.append(row[0])
+# To use a CSV list, un-comment the below
+# ws_list = []
+# with open(
+#     "/Users/jabreu1/Library/CloudStorage/OneDrive-Chewy.com,LLC/Documents/Workspaces/describe_workspaces.csv",
+#     newline="",
+#     encoding="utf-8-sig",
+# ) as inputfile:
+#     for row in csv.reader(inputfile):
+#         ws_list.append(row[0])
 
 
 def paginate(method, **kwargs):
@@ -24,11 +25,10 @@ def paginate(method, **kwargs):
 
 for region in regions:
     workspaces = boto3.client("workspaces", region_name=region)
-    for entry in ws_list:
-        for workspace in paginate(
-            workspaces.describe_workspaces,
-            DirectoryId="d-90677397c8",
-            UserName=str(entry),
-        ):
-            print(f"{workspace['WorkspaceId']}")
-            time.sleep(1)
+    # for entry in ws_list:
+    for workspace in paginate(
+            workspaces.describe_workspaces):
+
+        print(
+            f"{workspace['WorkspaceId']} | {workspace['UserName']} | {workspace['State']} | {workspace['WorkspaceProperties']['RunningMode']} | {workspace['WorkspaceProperties']['ComputeTypeName']} | {region} ")
+        time.sleep(1)
