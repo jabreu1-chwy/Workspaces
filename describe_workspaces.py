@@ -1,18 +1,14 @@
 import boto3
 import csv
 import time
+import datetime
+import os
 
 regions = ["us-east-1", "us-west-2"]
+date_string = datetime.datetime.now().strftime("%Y-%m-%d")
+file_name = f"AWS_Cleanup_{date_string}.csv"
 
-# To use a CSV list, un-comment the below
-# ws_list = []
-# with open(
-#     "/Users/jabreu1/Library/CloudStorage/OneDrive-Chewy.com,LLC/Documents/Workspaces/describe_workspaces.csv",
-#     newline="",
-#     encoding="utf-8-sig",
-# ) as inputfile:
-#     for row in csv.reader(inputfile):
-#         ws_list.append(row[0])
+directory = input("Enter the directory where you want to save the file: ")
 
 
 def paginate(method, **kwargs):
@@ -23,12 +19,16 @@ def paginate(method, **kwargs):
             yield result
 
 
-for region in regions:
-    workspaces = boto3.client("workspaces", region_name=region)
-    # for entry in ws_list:
-    for workspace in paginate(
-            workspaces.describe_workspaces):
+# Open a CSV file for writing in the specified directory
+with open(os.path.join(directory, file_name), 'w', newline='') as file:
+    writer = csv.writer(file)
 
-        print(
-            f"{workspace['WorkspaceId']} | {workspace['UserName']} | {workspace['State']} | {workspace['WorkspaceProperties']['RunningMode']} | {workspace['WorkspaceProperties']['ComputeTypeName']} | {region} ")
-        time.sleep(1)
+    # Write the header row to the CSV file
+    writer.writerow(["WorkspaceId", "UserName", "Region"])
+
+    for region in regions:
+        workspaces = boto3.client("workspaces", region_name=region)
+        for workspace in paginate(workspaces.describe_workspaces):
+            # Write the workspace data as a row in the CSV file
+            writer.writerow([workspace['WorkspaceId'],
+                            workspace['UserName'], region])
