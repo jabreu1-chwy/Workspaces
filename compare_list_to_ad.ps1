@@ -1,5 +1,5 @@
 # File path of the CSV file containing the usernames
-$filePath = "C:\Users\aa-jabreu1\Downloads\AWS_Cleanup_2023-02-07.csv"
+$filePath = "C:\Add\File\Path\Here\file.csv"
 
 # Get the contents of the CSV file
 $contents = Import-Csv $filePath
