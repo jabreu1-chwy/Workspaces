@@ -7,8 +7,10 @@ from botocore.exceptions import ClientError
 regions = ["us-east-1", "us-west-2"]
 
 term_list = []
+
+#Change path as needed
 with open(
-    "/Users/jabreu1/Library/CloudStorage/OneDrive-Chewy.com,LLC/Documents/Workspaces/terminate_workspaces.csv",
+    "/Enter/Your/File/Path/Here",
     newline="",
     encoding="utf-8-sig",
 ) as inputfile:
