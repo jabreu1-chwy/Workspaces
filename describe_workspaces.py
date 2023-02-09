@@ -19,11 +19,10 @@ def paginate(method, **kwargs):
             yield result
 
 
-# Open a CSV file for writing in the specified directory
+# Opens the CSV
 with open(os.path.join(directory, file_name), 'w', newline='') as file:
     writer = csv.writer(file)
 
-    # Write the header row to the CSV file
     writer.writerow(["WorkspaceId", "UserName", "Region"])
 
     for region in regions:
