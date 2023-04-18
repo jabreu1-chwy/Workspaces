@@ -3,51 +3,82 @@ import csv
 from botocore.exceptions import ClientError
 import time
 
-client = boto3.client("workspaces", region_name="us-east-1")
+# import usernames from csv into a list
 
-with open(
-    "/Users/jabreu1/Library/CloudStorage/OneDrive-Chewy.com,LLC/Documents/workspaces/create_workspaces.csv",
-    "r",
-) as f_input:
-    csv_input = csv.DictReader(f_input)
-    username = []
 
-    for row in csv_input:
-        username.append(row["username"])
+def import_csv(filename):
+    with open(filename, newline="", encoding="utf-8-sig") as inputfile:
+        usernames = [row[0] for row in csv.reader(inputfile)]
+    return usernames
 
-created_workspaces = []
-for user in username:
-    try:
-        response = client.create_workspaces(
-            Workspaces=[
-                {
-                    "DirectoryId": "d-90677397c8",  # change as needed
-                    "UserName": str(user),
-                    "BundleId": "wsb-83j5dqqlr",  # change as needed
-                    "VolumeEncryptionKey": "alias/aws/workspaces",
-                    "UserVolumeEncryptionEnabled": True,
-                    "RootVolumeEncryptionEnabled": True,
-                    "WorkspaceProperties": {
-                        "RunningMode": "AUTO_STOP",  # 'ALWAYS_ON' or 'AUTO_STOP'
-                        "RunningModeAutoStopTimeoutInMinutes": 60,  # remove if 'ALWAYS_ON' is selected
-                    },
-                    "Tags": [
-                        {"Key": "NAME", "Value": "Testing"},
-                    ],
+
+# create workspace, change fields as needed
+
+
+def create_workspace(username, directoryid, bundleid, client):
+    create_ws = client.create_workspaces(
+        Workspaces=[
+            {
+                "DirectoryId": directoryid,
+                "UserName": username,
+                "BundleId": bundleid,
+                "VolumeEncryptionKey": "alias/aws/workspaces",
+                "UserVolumeEncryptionEnabled": True,
+                "RootVolumeEncryptionEnabled": True,
+                "WorkspaceProperties": {
+                    "RunningMode": "AUTO_STOP",
+                    "RunningModeAutoStopTimeoutInMinutes": 60,
                 },
-            ]
-        )
-        if not len(response["FailedRequests"]) == 0:
-            created_workspaces += 1
-        else:
-            print(
-                f"Failed to create Workspace for: {user}")
-            time.sleep(2)
-    except ClientError as e:
-        print(f"Create Error for {user}: {e}")
-    except Exception as e:
-        print(f"Another error for {user}| Error: {e}")
-        print(response)
+                "Tags": [
+                    {"Key": "string", "Value": "string"},
+                ],
+            },
+        ]
+    )
+    return create_ws
 
-print(f"Sucessfully created {created_workspaces} Workspaces")
 
+# adds succeful or failed creations to a list to keep track
+
+
+def add_to_list(results, username, failed_workspaces, created_workspaces):
+    if len(results["FailedRequests"]):
+        failed_workspaces.append(username)
+    elif len(results["PendingRequests"]):
+        created_workspaces.append(username)
+
+
+def main():
+    filename = "/Users/jabreu1/Documents/Workspaces/workspace_ids.csv"
+    directoryid = "d-90677397c8"
+    bundleid = "wsb-6m4xgd4tz"
+    client = boto3.client("workspaces", region_name="us-east-1")
+    created_workspaces = []
+    failed_workspaces = []
+    usernames = import_csv(filename)
+    # loop through all usernames
+    for username in usernames:
+        try:
+            # create workspace
+            results = create_workspace(username, directoryid, bundleid, client)
+            # adds to list
+            add_to_list(results, username, failed_workspaces,
+                        created_workspaces)
+        except ClientError as e:
+            print(f"Client Error for {username}: {e}")
+            failed_workspaces.append(username)
+        except Exception as e:
+            print(f"Exception Error for {username}: {e}")
+            failed_workspaces.append(username)
+        # 2 second pause between calls
+        time.sleep(2)
+
+    print(
+        f"Sucessfully created {len(created_workspaces)} Workspaces: {created_workspaces}"
+    )
+    print(
+        f"Failed to create {len(failed_workspaces)} Workspaces: {failed_workspaces}")
+
+
+if __name__ == "__main__":
+    main()
